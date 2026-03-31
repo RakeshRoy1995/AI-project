@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Gemini AI Chat</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      padding: 40px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 100px;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 10px;
+      resize: none;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #22c55e;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .response {
+      margin-top: 20px;
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 10px;
+      min-height: 50px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🤖 Gemini AI</h1>
+
+  <textarea id="prompt" placeholder="Ask something..."></textarea>
+  <br>
+  <button onclick="send()">Generate</button>
+
+  <div class="response" id="response"></div>
+
+  <script>
+    async function send() {
+      const prompt = document.getElementById('prompt').value;
+      const responseDiv = document.getElementById('response');
+
+      // Show loading
+      responseDiv.innerText = "🤔 Thinking...";
+
+      const baseUrl = `${window.location.protocol}//${window.location.host}`;
+
+      try {
+        const res = await fetch(`${baseUrl}/gemini/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+
+        const data = await res.json();
+        responseDiv.innerText = data.data;
+
+      } catch (err) {
+        responseDiv.innerText = "❌ Error: " + err.message;
+      }
+    }
+
+    // Optional: Send on Enter key
+    document.getElementById('prompt').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        send();
+      }
+    });
+  </script>
+
+</body>
+</html>
