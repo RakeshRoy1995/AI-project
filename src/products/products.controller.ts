@@ -36,24 +36,44 @@ export class ProductsController {
     // Build prompt for Gemini
     const prompt = `
     You are a product assistant. 
-    From the following list of products (name, price, category), select the products that match the user's request:
+    From the following list of products (name, price, category, category_description, stock), select the products that match the user's request:
     User request: "${query}"
 
-    Products:
+    List of Products:
     ${allProducts
       .map(
         (p) =>
-          `Name: ${p.name}, Price: ${p.price}, Category: ${p.category.name}, Stock: ${p.stock}`
+          `Name: ${p.name}, Price: ${p.price}, Category: ${p.category.name}, ${p.category.description} Stock: ${p.stock}`
       )
       .join('\n')}
-    Return a JSON array of product IDs only.
+
+    CRITICAL RULE:
+    Must Return ONLY valid JSON. No explanation. No markdown. No text before or after.
+
+    Rules : 
+      1. The result must be parse to JSON like (JSON.parse) and must ensure no error 
+      2. If no products found then return []
+      3. Do not give any extra space or any character that makes error to parse JSON
+      4. Give only JSON of Array
+      5. ignore case sentative and spelling mistake
+      6. No markdown (no \`\`\`)
+      7. No explanation
+      8. No extra text
+
+    Example output : 
+      Return a JSON array of product name only. like 
+      1. "[ "I phone 12" , "TV"]"
+      2. "[ "Nike" , "apple" ]"
+      
+    Before giving code please confirm the rules.
     `;
 
-    const aiResponse = await this.geminiService.generateContent(prompt);
+    const aiResponse = await this.geminiService.generate(prompt);
     // Remove Markdown code block if present
     let cleaned = aiResponse.trim()
       .replace(/^```json\s*/i, '')   // remove ```json at the start
-      .replace(/```$/i, '');         // remove ``` at the end
+      .replace(/```$/i, '');         // remove ``` at the end=
+    console.log("🚀 ~ ProductsController ~ filterProducts ~ cleaned:", cleaned)
 
     let filteredIds: number[] = [];
     try {
@@ -65,8 +85,10 @@ export class ProductsController {
 
     // filteredIds contains names from AI
     const filteredNames: any[] = filteredIds;
+    console.log("🚀 ~ ProductsController ~ filterProducts ~ filteredNames:", filteredNames)
     // Filter products safely by name
     const filteredProducts = allProducts.filter((p) => filteredNames.includes(p.name));
+    console.log("🚀 ~ ProductsController ~ filterProducts ~ filteredProducts:", filteredProducts)
     return filteredProducts;
   }
 
